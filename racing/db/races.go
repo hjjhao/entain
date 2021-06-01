@@ -20,6 +20,7 @@ type RacesRepo interface {
 
 	// List will return a list of races.
 	List(filter *racing.ListRacesRequestFilter) ([]*racing.Race, error)
+	GetRaceById(id *int64) ([]*racing.Race, error)
 }
 
 type racesRepo struct {
@@ -104,6 +105,46 @@ func (r *racesRepo) applyFilter(query string, filter *racing.ListRacesRequestFil
 			orderDirection = filter.Options.OrderDirection
 		}
 		query += fmt.Sprintf(" ORDER BY %v %v", filter.Options.OrderBy, orderDirection)
+	}
+
+	return query, args
+}
+
+func (r *racesRepo) GetRaceById(id *int64) ([]*racing.Race, error) {
+	var (
+		err   error
+		query string
+		args  []interface{}
+	)
+
+	query = getRaceQueries()[racesList]
+
+	query, args = r.getSingleRaceFilter(query, id)
+
+	rows, err := r.db.Query(query, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.scanRaces(rows)
+}
+
+//
+func (r *racesRepo) getSingleRaceFilter(query string, id *int64) (string, []interface{}) {
+	var (
+		clauses []string
+		args    []interface{}
+	)
+
+	if id == nil {
+		return query, args
+	}
+
+	clauses = append(clauses, "id = ?")
+	args = append(args, *id)
+
+	if len(clauses) != 0 {
+		query += " WHERE " + strings.Join(clauses, " AND ")
 	}
 
 	return query, args
