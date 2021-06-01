@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"fmt"
 	"strings"
 	"sync"
 	"time"
@@ -64,8 +65,9 @@ func (r *racesRepo) List(filter *racing.ListRacesRequestFilter) ([]*racing.Race,
 
 func (r *racesRepo) applyFilter(query string, filter *racing.ListRacesRequestFilter) (string, []interface{}) {
 	var (
-		clauses []string
-		args    []interface{}
+		clauses        []string
+		args           []interface{}
+		orderDirection string = "DESC"
 	)
 
 	if filter == nil {
@@ -82,16 +84,26 @@ func (r *racesRepo) applyFilter(query string, filter *racing.ListRacesRequestFil
 
 	// filtering all the races with visible = 1
 	if filter.Options != nil && filter.Options.VisibleOnly == true {
-		clauses = append(clauses, "visible = 1")
+		clauses = append(clauses, "visible = ?")
+		args = append(args, 1)
 	}
 
 	// filtering all the races with visible = 0
 	if filter.Options != nil && filter.Options.VisibleOnly == false {
-		clauses = append(clauses, "visible = 0")
+		clauses = append(clauses, "visible = ?")
+		args = append(args, 0)
 	}
 
 	if len(clauses) != 0 {
 		query += " WHERE " + strings.Join(clauses, " AND ")
+	}
+
+	// Add sort ability
+	if filter.Options != nil && filter.Options.OrderBy != "" {
+		if filter.Options.OrderDirection == "ASC" || filter.Options.OrderDirection == "DESC" {
+			orderDirection = filter.Options.OrderDirection
+		}
+		query += fmt.Sprintf(" ORDER BY %v %v", filter.Options.OrderBy, orderDirection)
 	}
 
 	return query, args
