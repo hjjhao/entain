@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"strings"
 	"sync"
-	"time"
 
 	"git.neds.sh/matty/entain/racing/proto/sports"
 	"github.com/golang/protobuf/ptypes"
@@ -102,11 +101,12 @@ func (m *sportsRepo) scanEvents(
 	rows *sql.Rows,
 ) ([]*sports.Event, error) {
 	var events []*sports.Event
-
 	for rows.Next() {
 		var event sports.Event
-		var advertisedStart time.Time
-		err := rows.Scan(&event.Id, &event.Name, &event.Athletics, &event.Location, &event.Following, &event.Visible, &advertisedStart)
+		var following sql.NullInt64
+		var advertisedStart sql.NullTime
+
+		err := rows.Scan(&event.Id, &event.Name, &event.Athletics, &event.Location, &following, &event.Visible, &advertisedStart)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				return nil, nil
@@ -114,8 +114,12 @@ func (m *sportsRepo) scanEvents(
 			return nil, err
 		}
 
-		if &advertisedStart != nil {
-			ts, err := ptypes.TimestampProto(advertisedStart)
+		if following.Valid {
+			event.Following = following.Int64
+		}
+
+		if advertisedStart.Valid {
+			ts, err := ptypes.TimestampProto(advertisedStart.Time)
 			if err != nil {
 				return nil, err
 			}
