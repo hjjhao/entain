@@ -1,0 +1,54 @@
+syntax = "proto3";
+package sports;
+
+option go_package = "/sports";
+
+import "google/protobuf/timestamp.proto";
+
+service Sports {
+  // ListEvents returns a list of all events.
+  rpc ListEvents(ListEventsRequest) returns (ListEventsResponse) {}
+}
+
+/* Requests/Responses */
+
+// Request for ListEvents call.
+message ListEventsRequest { ListEventsRequestFilter filter = 1; }
+
+// Response to ListEvents call.
+message ListEventsResponse { repeated Event events = 1; }
+
+// Filter for listing events.
+message ListEventsRequestFilter {
+  repeated int64 ids = 1;
+  ListEventsRequestOptionFilter options = 2;
+}
+
+// Filter for listing events.
+message ListEventsRequestOptionFilter {
+  bool visible_only = 1;
+
+  // Add sort options
+  string order_by = 2;
+  string order_direction = 3;
+}
+
+/* Resources */
+
+// A event resource.
+message Event {
+  // ID represents a unique identifier for the sport.
+  int64 id = 1;
+  // Name is the official name given to the sport.
+  string name = 2;
+  // Number represents the type of the sport.
+  string athletics = 3;
+  // Visible represents location of the event.
+  string location = 4;
+  // Visible represents average viewer of the event.
+  int64 following = 5;
+  // Visible represents whether or not the event is visible.
+  bool visible = 6;
+  // AdvertisedStartTime is the time the event is advertised to run.
+  google.protobuf.Timestamp advertised_start_time = 7;
+}
