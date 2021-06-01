@@ -126,6 +126,13 @@ func (m *racesRepo) scanRaces(
 			return nil, err
 		}
 
+		// Add status field
+		if advertisedStart.Before(time.Now()) {
+			race.Status = "CLOSED"
+		} else {
+			race.Status = "OPEN"
+		}
+
 		ts, err := ptypes.TimestampProto(advertisedStart)
 		if err != nil {
 			return nil, err
