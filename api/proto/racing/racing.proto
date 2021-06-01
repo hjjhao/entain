@@ -34,6 +34,10 @@ message ListRacesRequestFilter {
 // Filter for listing races.
 message ListRacesRequestOptionFilter {
   bool visible_only = 1;
+
+  // Add sort options
+  string order_by = 2;
+  string order_direction = 3;
 }
 
 /* Resources */
